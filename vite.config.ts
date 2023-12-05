@@ -14,11 +14,6 @@ export default defineConfig({
       }
     }
   )],
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
-  },
   // devpost
   build: {
     lib: {
@@ -31,26 +26,4 @@ export default defineConfig({
   define: {
     'process.env': process.env
   }
-  // second video
-  // build: {
-  //   rollupOptions: {
-  //     output: {
-  //       entryFileNames: "index.js",
-  //       sourcemap: false,
-  //     },
-  //   },
-  // },
-  // first video
-  // build: {
-  //   cssCodeSplit: false,
-  //   lib: {
-  //     entry: "./src/web-comp.js",
-  //     formats: ["es", "cjs"],
-  //     name: "vue-web-comp",
-  //     fileName: (format) => (format === "es" ? "index.js" : "index.cjs"),
-  //   },
-  //   sourcemap: true,
-  //   target: "esnext",
-  //   minify: false
-  // }
 });
