@@ -21,7 +21,7 @@ npm run build
 
 A web component example taking as guideline this Youtube video
 
-## [Demo](https://www.youtube.com/watch?v=SoPo7bnhbqA)
+## [Youtube video](https://www.youtube.com/watch?v=SoPo7bnhbqA)
 
 ### Features
 - Compatible with all Javascript frameworks (Vue, Angular, React, etc.) or no framework at all
