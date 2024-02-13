@@ -1,9 +1,9 @@
 import { defineCustomElement } from "vue";
 import main from "./assets/main.css";
 
-import VueCoinTracker from "./components/coin-tracker.ce.vue";
-console.log(VueCoinTracker.styles);
-export const CoinTracker = defineCustomElement(VueCoinTracker);
+import VueTokenizationForm from "./components/tokenization-form.ce.vue";
+console.log(VueTokenizationForm.styles);
+export const TokenizationForm = defineCustomElement(VueTokenizationForm);
 
-customElements.define("coin-tracker", CoinTracker);
+customElements.define("tokenization-form", TokenizationForm);
 

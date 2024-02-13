@@ -18,9 +18,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: './src/web-comp.ce.ts',
-      name: 'coin-tracker',
+      name: 'tokenization-form',
       // the proper extensions will be added
-      fileName: 'coin-tracker'
+      fileName: 'tokenization-form'
     }
   },
   define: {

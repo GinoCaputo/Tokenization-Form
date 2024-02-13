@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CoinTracker from './components/coin-tracker.ce.vue';
+import TokenizationForm from './components/tokenization-form.ce.vue';
 </script>
 
 <template>
   <h1>hello world</h1>
-  <coin-tracker pair="SOL-USD" background="yellow"></coin-tracker>
+  <tokenization-form showErrors="true"></tokenization-form>
 </template>
