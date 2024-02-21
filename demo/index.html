@@ -1,40 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tokenization Form</title>
-  </head>
-  <body>
-    <div style="width: 500px;">
-      <tokenization-form :showerror="false">
-            <div slot="header">
-            <h1>Header</h1>
-            </div>
-            <div slot="footer">
-            <h1>Footer 2</h1>
-            </div>      
-      </tokenization-form>
-    </div>
-    <style>
-        tokenization-form::part(button) {
-            color: black;
-            border: dashed 2px black;
-            background-color: #fec0ff;
-        }
-        tokenization-form::part(button):hover {
-            background-color: #fd8fff;
-        }
-    </style>
-    <script src="./dist/tokenization-form.umd.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const simpleSample = document.querySelector('simple-sample');
-        simpleSample.addEventListener('validation-error', (event) => {
-          // Handle the validation error
-          console.log(event.detail); // Contains field and message
-        });
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tokenization Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+  <div style="margin-bottom: 20px;">
+    <label for="themeSelect">Choose a theme:</label>
+    <select id="themeSelect">
+      <option value="default">Default</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  </div>
+
+  <div style="width: 500px;">
+    <tokenization-form type="light">
+      <div slot="header">
+        <h1>Header</h1>
+      </div>
+      <div slot="footer">
+        <h1>Footer</h1>
+      </div>
+    </tokenization-form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="./dist/tokenization-form.umd.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeSelect = document.getElementById('themeSelect');
+      const TokenizationForm = document.querySelector('tokenization-form');
+
+      function changeTheme(theme) {
+        TokenizationForm.setAttribute('type', theme);
+      }
+
+      changeTheme(themeSelect.value);
+
+      themeSelect.addEventListener('change', (event) => {
+        changeTheme(event.target.value);
       });
-    </script>
-  </body>
+
+      TokenizationForm.addEventListener('validation-error', (event) => {
+        console.log(event.detail); // Contains field and message
+      });
+    });
+  </script>
+</body>
 </html>

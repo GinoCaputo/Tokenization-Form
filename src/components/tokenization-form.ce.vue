@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, computed, watchEffect } from 'vue';
 const emit = defineEmits(['validation-error']);
 
 const props = defineProps<{
-    showerror?: boolean
+  type?: string
 }>();
 
 const form = reactive({
@@ -18,6 +18,7 @@ const validationErrors = reactive({
   cvc: '',
   expirationDate: ''
 });
+
 const validateCardNumber = () => {
   // Remove all non-digit characters
   let cardNumber = String(form.cardNumber)
@@ -102,15 +103,27 @@ const submitForm = () => {
     console.log('Validation errors', validationErrors);
   }
 };
+// Compute the theme class based on the type prop
+const themeClass = computed(() => {
+  switch (props.type) {
+    case 'dark':
+      return 'dark-theme';
+    case 'light':
+      return 'light-theme';
+    default:
+      return 'default-theme';
+  }
+});
 </script>
 
 <template>
-  <div class="container">
+  <div class="container custom-component" :class="themeClass">
     <slot name="header"></slot>
-    <h2>tokenization Form</h2>
-    <form @submit.prevent="submitForm">
+    <h2>Tokenization Form</h2>
       <!-- Name Field -->
       <div class="mb-4">
+        <label for="type">type</label>
+        <pre>{{ type }}</pre>
         <label for="name" class="label">Name</label>
         <input part="input" type="text" id="name" v-model.trim="form.name" @blur="validateName"
               :class="{'border-red-500': validationErrors.name}" required>
@@ -138,17 +151,16 @@ const submitForm = () => {
       </div>
       <div>
       </div>
-      <div class="error-info" v-if="showerror">
+      <div class="error-info">
         <h3>Error feedback</h3>
-        <p class="text-red-500" v-if="validationErrors.name">{{ validationErrors.name }}</p>
-        <p class="text-red-500" v-if="validationErrors.cardNumber">{{ validationErrors.cardNumber }}</p>
-        <p class="text-red-500" v-if="validationErrors.cvc">{{ validationErrors.cvc }}</p>
-        <p class="text-red-500" v-if="validationErrors.expirationDate">{{ validationErrors.expirationDate }}</p>
+        <p class="text-red-500" v-if="validationErrors.name">* {{ validationErrors.name }}</p>
+        <p class="text-red-500" v-if="validationErrors.cardNumber">* {{ validationErrors.cardNumber }}</p>
+        <p class="text-red-500" v-if="validationErrors.cvc">* {{ validationErrors.cvc }}</p>
+        <p class="text-red-500" v-if="validationErrors.expirationDate">* {{ validationErrors.expirationDate }}</p>
       </div>
       <div>
-        <button part="button">Try tokenization</button>
-      </div>
-    </form>       
+        <button part="button" @click="submitForm">Try tokenization</button>
+      </div>      
     <slot name="footer"></slot>
 
 
@@ -157,7 +169,6 @@ const submitForm = () => {
 </template>
 
 <style scoped>
-
 * {
   font-family: Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
 
@@ -165,7 +176,7 @@ const submitForm = () => {
 input {
   display: block;
   display: block;
-    width: 100%;
+    width: -webkit-fill-available;
     height: 40px;
     padding: 0.375rem 0.75rem;
     font-size: 1rem;
@@ -211,6 +222,31 @@ button {
   border-color: red;
 }
 .text-red-500 {
-  color: red
+  color: red;
+  font-size: 10px;
 }
+.custom-component {
+  /* Use a CSS custom property */
+  color: var(--text-color, #000); /* Fallback to #000 if --text-color is not defined */
+  padding: 20px;  
+}
+/* Default theme */
+/* Default theme */
+.default-theme {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Dark theme */
+.dark-theme {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Light theme */
+.light-theme {
+  background-color: #fff;
+  color: #000;
+}
+
 </style>
