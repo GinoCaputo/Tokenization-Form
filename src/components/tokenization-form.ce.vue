@@ -124,10 +124,9 @@ const submitForm = async () => {
     }
   } catch (error) {
     // Handle or log the error
-    console.log('There was a problem with the fetch operation:', error);
     submitButtonText.value = 'Submit';
     isButtonDisabled.value = false;
-    emit('validation-error', { message: 'Error de validación' });
+    emit('validation-error', { message: 'Error de validación', formState });
 
     // You might also want to update the UI or state to reflect the error
   }
