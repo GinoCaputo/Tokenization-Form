@@ -4,47 +4,107 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tokenization Form</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
+  <style>
+    span[id*='cc-'] {
+   display: block;
+   height: 40px;
+   margin-bottom: 15px;
+ }
+ 
+ span[id*='cc-'] iframe {
+   height: 100%;
+   width: 100%;
+ }
+ 
+ pre {
+   font-size: 12px;
+ }
+ 
+ .form-field {
+   display: block;
+   width: 100%;
+   height: calc(2.25rem + 2px);
+   padding: 0.375rem 0.75rem;
+   font-size: 1rem;
+   line-height: 1.5;
+   color: #495057;
+   background-color: #fff;
+   background-clip: padding-box;
+   border: 1px solid #ced4da;
+   border-radius: 0.25rem;
+   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+ }
+ 
+ .form-field iframe {
+   border: 0 none transparent;
+   height: 100%;
+   vertical-align: middle;
+   width: 100%;
+ }
+ 
+ p {
+   margin-bottom: 10px;
+ }
+ 
+ #errors div {
+   font-size: 11px;
+   color: #ff1721;
+ }
+ 
+ #errors div.error-msg {
+   font-weight: 400;
+   letter-spacing: 0;
+   font-style: normal;
+ }
+ .vgs-collect-container__invalid.vgs-collect-container__touched {
+   border: 1px solid #ff1721;
+ }
+   </style>
 </head>
 <body>
-  <div style="margin-bottom: 20px;">
-    <label for="themeSelect">Choose a theme:</label>
-    <select id="themeSelect">
-      <option value="default">Default</option>
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-    </select>
-  </div>
-
   <div style="width: 500px;">
-    <tokenization-form type="light">
-      <div slot="header">
-        <h1>Header</h1>
+    <tokenization-form>
+      <div slot="cc-name">
+        <span
+          id="cc-name"
+          class="form-field">
+          <!--JUPITER Collect iframe for card name field will be here!-->
+        </span>
       </div>
-      <div slot="footer">
-        <h1>Footer</h1>
+      <div slot="cc-number">
+        <span id="cc-number" class="form-field"
+        part="input">
+          <!--JUPITER Collect iframe for card number field will be here!-->
+        </span>
+      </div>
+      <div slot="cc-cvc">
+        <span id="cc-cvc" class="form-field"
+        part="input">
+          <!--JUPITER Collect iframe for CVC field will be here!-->
+        </span>
+      </div>
+      <div slot="cc-expiration-date">
+        <span id="cc-expiration-date" class="form-field"
+        part="input">
+          <!--JUPITER Collect iframe for expiration date field will be here!-->
+        </span>
       </div>
     </tokenization-form>
   </div>
-  <script src="https://tokenization-form-z3m5.vercel.app/tokenization-form.umd.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const themeSelect = document.getElementById('themeSelect');
-      const TokenizationForm = document.querySelector('tokenization-form');
-
-      function changeTheme(theme) {
-        TokenizationForm.setAttribute('type', theme);
-      }
-
-      changeTheme(themeSelect.value);
-
-      themeSelect.addEventListener('change', (event) => {
-        changeTheme(event.target.value);
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const TokenizationForm = document.querySelector('tokenization-form');  
+        TokenizationForm.addEventListener('validation-error', (event) => {
+          console.log(event.detail); // Contains field and message
+        });
+        TokenizationForm.addEventListener('submit-success', (event) => {
+          console.log(event.detail); // Contains field and message
+        });
       });
+    </script>
+  <!-- <script src="https://tokenization-form-z3m5.vercel.app/tokenization-form.umd.js"></script> -->
+  <script src="../dist/tokenization-form.umd.js"></script>
 
-      TokenizationForm.addEventListener('validation-error', (event) => {
-        console.log(event.detail); // Contains field and message
-      });
-    });
-  </script>
 </body>
 </html>

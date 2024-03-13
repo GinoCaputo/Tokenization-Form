@@ -1,252 +1,260 @@
 <script setup lang="ts">
-import { reactive, computed, watchEffect } from 'vue';
-const emit = defineEmits(['validation-error']);
+import { computed, onMounted, reactive, ref } from 'vue';
+import { loadVGSCollect } from '@vgs/collect-js';
 
-const props = defineProps<{
-  type?: string
-}>();
-
-const form = reactive({
-  name: '',
-  cardNumber: '',
-  cvc: '',
-  expirationDate: ''
+let form = ref({} as any);
+let formState = reactive({
+  CreditCardNumber: { errorMessages: [] },
+  Cvv: { errorMessages: [] },
+  ExpirationDate: { errorMessages: [] },
+  CardHolderName: { errorMessages: [] }
 });
-const validationErrors = reactive({
-  name: '',
-  cardNumber: '',
-  cvc: '',
-  expirationDate: ''
+const errorsVisible = ref(false);
+const submitButtonText = ref('Submit');
+const isButtonDisabled = ref(false);
+const emit = defineEmits(['submit-success', 'validation-error']);
+
+const validateForm = (event: { preventDefault: () => void }) => {
+  event.preventDefault();
+  const { CreditCardNumber, Cvv, ExpirationDate, CardHolderName } = formState;
+  errorsVisible.value =
+    CreditCardNumber.errorMessages.length > 0 ||
+    Cvv.errorMessages.length > 0 ||
+    ExpirationDate.errorMessages.length > 0 ||
+    CardHolderName.errorMessages.length > 0;
+
+  if (errorsVisible.value) {
+    // Display errors and keep the button enabled
+    submitButtonText.value = 'Submit';
+    isButtonDisabled.value = false;
+  } else {
+    // No errors, proceed to tokenize
+    submitButtonText.value = 'Tokenizing...';
+    isButtonDisabled.value = true;
+    submitForm();
+    // Call your tokenization function here
+  }
+};
+onMounted(async () => {
+  const collect: any = await loadVGSCollect({
+    vaultId: 'tntne5koztu',
+    environment: 'sandbox',
+    version: '2.7.0'
+  }).catch(e => {});
+  form = collect.init((state: any) => {
+    if (state.CreditCardNumber && state.Cvv && state.ExpirationDate && state.CardHolderName)
+      formState = state;
+  });
+  // Create JUPITER Collect field for credit card name
+  form.field('#cc-name', {
+    type: 'text',
+    name: 'CardHolderName',
+    placeholder: 'Joe Business',
+    validations: ['required']
+  });
+
+  // Create JUPITER Collect field for credit card number
+  form.field('#cc-number', {
+    type: 'card-number',
+    name: 'CreditCardNumber',
+    successColor: '#4F8A10',
+    errorColor: '#D8000C',
+    placeholder: '4111 1111 1111 1111',
+    validations: ['required', 'validCardNumber']
+  });
+
+  // Create JUPITER Collect field for CVC
+  form.field('#cc-cvc', {
+    type: 'card-security-code',
+    name: 'Cvv',
+    placeholder: '344',
+    validations: ['required', 'validCardSecurityCode']
+  });
+
+  // Create JUPITER Collect field for credit card expiration date
+  form.field('#cc-expiration-date', {
+    type: 'card-expiration-date',
+    yearLength: 2,
+    name: 'ExpirationDate',
+    placeholder: '01 / 25',
+    serializers: [
+      {
+        name: 'separate',
+        options: {
+          monthName: 'ExpirationMonth',
+          yearName: 'ExpirationYear'
+        }
+      }
+    ],
+    validations: ['required', 'validCardExpirationDate']
+  });
+  form.value = form
 });
+// Handle form submission
+const submitForm = async () => {
+  try {
+    // Implement the form submission logic here
+    const env = 'sandbox-platform';
+    const subMerchantId = 'jpt-sim-md-1';
+    let resp = await fetch(
+      'https://' +
+        env +
+        '.jupiterhq.com/v1/transactions/creditcard/tokenization/' +
+        subMerchantId +
+        '/session'
+    );
+    let sessionData = await resp.json();
+    let sessionId;
+    if (sessionData.data && sessionData.data.status === 'active') {
+      sessionId = sessionData.data.sessionId;
+    }
+    if (form.value) { // Accediendo a la instancia de VGSCollect a través de .value
 
-const validateCardNumber = () => {
-  // Remove all non-digit characters
-  let cardNumber = String(form.cardNumber)
-  const digitsOnly = cardNumber.replace(/\D+/g, '');
-  form.cardNumber = digitsOnly; // Update the form with cleaned input
-  // Basic validation for length of card number
-  if (digitsOnly.length >= 13 && digitsOnly.length <= 19) {
-    validationErrors.cardNumber = '';
-  } else {
-    validationErrors.cardNumber = 'Card number must be between 13 to 19 digits';
-    emit('validation-error', { field: 'cardNumber', message: validationErrors.cardNumber });
+    //submit cc fields to VGS for tokenization
+    form.value.submit(
+      '/v1/transactions/creditcard/tokenization/' + subMerchantId,
+      { data: { sessionToken: sessionId } },
+      async (status: any, response:any) => {
+        submitButtonText.value = 'Submit';
+        emit('submit-success', { data: response.data.token });
+        submitButtonText.value = 'Submit';
+        isButtonDisabled.value = false;
+      }
+    );
+    }
+  } catch (error) {
+    // Handle or log the error
+    console.log('There was a problem with the fetch operation:', error);
+    submitButtonText.value = 'Submit';
+    isButtonDisabled.value = false;
+    emit('validation-error', { message: 'Error de validación' });
+
+    // You might also want to update the UI or state to reflect the error
   }
 };
-// Name validation logic
-const validateName = () => {
-  validationErrors.name = form.name.trim().length > 0 ? '' : 'Name is required';
-  if (validationErrors.name !== '') {
-    emit('validation-error', { field: 'name', message: validationErrors.name });
-}
 
-};
-
-// CVC validation logic
-const validateCVC = () => {
-  const cvcPattern = /^\d{3,4}$/;
-  validationErrors.cvc = cvcPattern.test(form.cvc) ? '' : 'CVC must be 3 or 4 digits';
-  if (validationErrors.cvc !== '') {
-  emit('validation-error', { field: 'cvc', message: validationErrors.cvc });
-}
-};
-
-// Expiration date validation logic
-const validateExpirationDate = () => {
-  const expirationDatePattern = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
-  const matches = form.expirationDate.match(expirationDatePattern);
-  if (matches) {
-    const today = new Date();
-    const expYear = Number(matches[2]); // Convert string to number
-    const expMonth = Number(matches[1]) - 1; // Convert string to number and adjust month for 0 index
-    const expDate = new Date(Number(`20${expYear}`), expMonth);
-    validationErrors.expirationDate = (expDate > today) ? '' : 'Expiration date must be in the future';
-    emit('validation-error', { field: 'expirationDate', message: validationErrors.expirationDate });
-  } else {
-    validationErrors.expirationDate = 'Expiration date must be in MM/YY format';
-    emit('validation-error', { field: 'expirationDate', message: validationErrors.expirationDate });
-
-  }
-}
-const filterNumeric = (event: any) => {
-  const value = event.target.value;
-  form.cardNumber = value.replace(/\D/g, '');
-};
-// Mask the expiration date input
-const maskExpirationDate = (event: any) => {
-  let value = event.target.value;
-  const cleaned = value.replace(/\D+/g, '');
-  
-  // Break the string into parts based on the expected MM/YY format
-  let month = cleaned.substring(0, 2);
-  let year = cleaned.substring(2, 4);
-  
-  // Reconstruct the value, inserting a slash where appropriate
-  value = month + (year ? '/' + year : '');
-  form.expirationDate = value;
-};
-const validateForm = () => {
-  validateCardNumber();
-  validateName();
-  validateCVC();
-  validateExpirationDate();
-}
-
-const submitForm = () => {
-  validateForm();
-  // ... call validation for other fields ...
-
-  if (!Object.values(validationErrors).some(Boolean)) {
-    // If there are no validation errors, proceed with the submission
-    console.log('Form submitted', form);
-  } else {
-    // Handle the invalid form case
-    console.log('Validation errors', validationErrors);
-  }
-};
-// Compute the theme class based on the type prop
-const themeClass = computed(() => {
-  switch (props.type) {
-    case 'dark':
-      return 'dark-theme';
-    case 'light':
-      return 'light-theme';
-    default:
-      return 'default-theme';
-  }
-});
 </script>
 
 <template>
-  <div class="container custom-component" :class="themeClass">
-    <slot name="header"></slot>
-    <h2>Tokenization Form</h2>
-      <!-- Name Field -->
-      <div class="mb-4">
-        <label for="type">type</label>
-        <pre>{{ type }}</pre>
-        <label for="name" class="label">Name</label>
-        <input part="input" type="text" id="name" v-model.trim="form.name" @blur="validateName"
-              :class="{'border-red-500': validationErrors.name}" required>
-      </div>
+  <main>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="row card card-outline-secondary">
+          <div class="card-body">
+            <div class="alert alert-info p-2">
+              Please fill in and submit a form to get the token.
+            </div>
+            <form id="cc-form">
+              <div class="form-group">
+                <label for="cc-name">Name</label>
+                <slot name="cc-name"></slot>
+              </div>
+              <div class="form-group">
+                <label for="cc-number">Card number</label>
+                <slot name="cc-number"></slot>
+              </div>
+              <div class="form-group">
+                <label for="cc-cvc">CVC</label>
+                <slot name="cc-cvc"></slot>
+              </div>
+              <div class="form-group">
+                <label for="cc-expiration-date">Expiration date</label>
+                <slot name="cc-expiration-date"></slot>
+              </div>
 
-      <!-- CC Field -->
-      <div class="mb-4">
-        <label for="cc" class="label">Credit Card</label>
-        <input part="input" type="number" id="cc" v-model.trim="form.cardNumber" @blur="validateCardNumber"
-               :class="{'border-red-500': validationErrors.cardNumber}" required>
+              <!--Submit credit card form button-->
+              <div>
+                <button
+                  id="submitButton"
+                  class="btn btn-success btn-block ml-auto"
+                  @click="validateForm($event)"
+                  :disabled="isButtonDisabled"
+                >
+                  {{ submitButtonText }}
+                </button>
+              </div>
+            </form>
+            <div v-if="errorsVisible" id="errors">
+              <div
+                class="error-msg"
+                v-if="formState.CreditCardNumber.errorMessages.length > 0"
+              >
+                Card number {{ formState.CreditCardNumber.errorMessages[0] }}
+              </div>
+              <div class="error-msg" v-if="formState.Cvv.errorMessages.length > 0">
+                CVC {{ formState.Cvv.errorMessages[0] }}
+              </div>
+              <div class="error-msg" v-if="formState.ExpirationDate.errorMessages.length > 0">
+                Expiration date {{ formState.ExpirationDate.errorMessages[0] }}
+              </div>
+              <div class="error-msg" v-if="formState.CardHolderName.errorMessages.length > 0">
+                Name {{ formState.CardHolderName.errorMessages[0] }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <!-- CVC Field -->
-      <div class="mb-4">
-        <label for="cvc" class="label">CVC</label>
-        <input part="input" type="text" id="cvc" v-model="form.cvc" @input="filterNumeric" @blur="validateCVC"
-              :class="{'border-red-500': validationErrors.cvc}" required>
-      </div>
-
-      <!-- Expiration Date Field -->
-      <div class="mb-4">
-        <label for="expirationDate" class="label">Expiration date</label>
-        <input part="input" type="text" id="expirationDate" v-model="form.expirationDate" @input="maskExpirationDate"  @blur="validateExpirationDate"
-              :class="{'border-red-500': validationErrors.expirationDate}" required>
-      </div>
-      <div>
-      </div>
-      <div class="error-info">
-        <h3>Error feedback</h3>
-        <p class="text-red-500" v-if="validationErrors.name">* {{ validationErrors.name }}</p>
-        <p class="text-red-500" v-if="validationErrors.cardNumber">* {{ validationErrors.cardNumber }}</p>
-        <p class="text-red-500" v-if="validationErrors.cvc">* {{ validationErrors.cvc }}</p>
-        <p class="text-red-500" v-if="validationErrors.expirationDate">* {{ validationErrors.expirationDate }}</p>
-      </div>
-      <div>
-        <button part="button" @click="submitForm">Try tokenization</button>
-      </div>      
-    <slot name="footer"></slot>
-
-
-
-  </div>
+    </div>
+  </main>
 </template>
 
-<style scoped>
-* {
-  font-family: Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
 
-}
-input {
+<style scoped>
+@import 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css';
+
+span[id*='cc-'] {
   display: block;
-  display: block;
-    width: -webkit-fill-available;
-    height: 40px;
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    margin-bottom: 8px;
+  height: 40px;
+  margin-bottom: 15px;
 }
-form {
+
+span[id*='cc-'] iframe {
+  height: 100%;
   width: 100%;
 }
-button {
-  display: inline-block;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  background: #fff;
-  border: 1px solid #dcdfe6;
-  color: #606266;
-  -webkit-appearance: none;
-  text-align: center;
-  box-sizing: border-box;
-  outline: 0;
-  margin: 0;
-  transition: .1s;
-  font-weight: 500;
-  padding: 12px 20px;
-  font-size: 14px;
-  border-radius: 4px;
-  color: #fff;
-  background-color: #409eff;
-  border-color: #409eff;
-  cursor: pointer;
-  margin-left: auto;
-  align-self: flex-end;
-  display: flex;
-}
-.border-red-500 {
-  border-color: red;
-}
-.text-red-500 {
-  color: red;
-  font-size: 10px;
-}
-.custom-component {
-  /* Use a CSS custom property */
-  color: var(--text-color, #000); /* Fallback to #000 if --text-color is not defined */
-  padding: 20px;  
-}
-/* Default theme */
-/* Default theme */
-.default-theme {
-  background-color: #f0f0f0;
-  color: #333;
+
+pre {
+  font-size: 12px;
 }
 
-/* Dark theme */
-.dark-theme {
-  background-color: #333;
-  color: #fff;
-}
-
-/* Light theme */
-.light-theme {
+.form-field {
+  display: block;
+  width: 100%;
+  height: calc(2.25rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
   background-color: #fff;
-  color: #000;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
+.form-field iframe {
+  border: 0 none transparent;
+  height: 100%;
+  vertical-align: middle;
+  width: 100%;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+#errors div {
+  font-size: 11px;
+  color: #ff1721;
+  padding: 5px 0;
+}
+
+#errors div.error-msg {
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: normal;
+}
+.vgs-collect-container__invalid.vgs-collect-container__touched {
+  border: 1px solid #ff1721;
+}
 </style>
