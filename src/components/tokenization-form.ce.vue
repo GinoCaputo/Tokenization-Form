@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { loadVGSCollect } from "@vgs/collect-js";
-
+const props = defineProps<{
+    showbutton?: boolean,
+}>();
 let form = ref({} as any);
 let formState = reactive({
   CreditCardNumber: { errorMessages: [] },
@@ -137,6 +139,9 @@ const submitForm = async () => {
     // You might also want to update the UI or state to reflect the error
   }
 };
+
+defineExpose({ validateForm })
+
 </script>
 
 <template>
@@ -179,6 +184,7 @@ const submitForm = async () => {
                   class="btn btn-success btn-block ml-auto"
                   @click="validateForm($event)"
                   :disabled="isButtonDisabled"
+                  v-if="showbutton"
                 >
                   {{ submitButtonText }}
                 </button>
