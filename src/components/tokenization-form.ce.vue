@@ -29,6 +29,9 @@ const validateForm = (event: { preventDefault: () => void }) => {
     // Display errors and keep the button enabled
     submitButtonText.value = "Submit";
     isButtonDisabled.value = false;
+    emit("validation-error", { message: "Error de validación", formState });
+
+    
   } else {
     // No errors, proceed to tokenize
     submitButtonText.value = "Tokenizing...";
@@ -135,7 +138,8 @@ const submitForm = async () => {
     submitButtonText.value = "Submit";
     isButtonDisabled.value = false;
     emit("validation-error", { message: "Error de validación", formState });
-
+    return error
+    
     // You might also want to update the UI or state to reflect the error
   }
 };
