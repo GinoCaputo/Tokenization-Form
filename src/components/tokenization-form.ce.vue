@@ -37,7 +37,7 @@ const validateForm = (event: { preventDefault: () => void }) => {
     isButtonDisabled.value = false;
     emit("validation-error", { message: "Error de validación", formState });
 
-    
+
   } else {
     // No errors, proceed to tokenize
     submitButtonText.value = "Tokenizing...";
@@ -51,7 +51,7 @@ onMounted(async () => {
     vaultId: "tntne5koztu",
     environment: "sandbox",
     version: "2.7.0",
-  }).catch((e) => {});
+  }).catch((e) => { });
   form = collect.init((state: any) => {
     if (
       state.CreditCardNumber &&
@@ -106,7 +106,7 @@ onMounted(async () => {
         validations: ["required", "validCardExpirationDate"],
       });
       break;
-    }
+  }
   form.value = form;
 });
 // Handle form submission
@@ -117,10 +117,10 @@ const submitForm = async () => {
     const subMerchantId = "jpt-sim-md-1";
     let resp = await fetch(
       "https://" +
-        env +
-        ".jupiterhq.com/v1/transactions/creditcard/tokenization/" +
-        subMerchantId +
-        "/session"
+      env +
+      ".jupiterhq.com/v1/transactions/creditcard/tokenization/" +
+      subMerchantId +
+      "/session"
     );
     let sessionData = await resp.json();
     let sessionId;
@@ -148,7 +148,7 @@ const submitForm = async () => {
     isButtonDisabled.value = false;
     emit("validation-error", { message: "Error de validación", formState });
     return error
-    
+
     // You might also want to update the UI or state to reflect the error
   }
 };
@@ -162,35 +162,34 @@ defineExpose({ validateForm, inputType })
     <div class="row">
       <div class="col-md-12">
         <div class="row card card-outline-secondary" part="card">
-          <div class="card-body">
-            <form id="cc-form">
-              <div v-if="inputType === 'name'" part="cc-name">
-                <div class="form-group">
-                  <label for="cc-name">Name</label>
-                  <slot name="cc-name"></slot>
-                </div>
+          <form id="cc-form">
+            <div v-if="inputType === 'name'" part="cc-name">
+              <div class="form-group">
+                <label for="cc-name">Name</label>
+                <slot name="cc-name"></slot>
               </div>
-              <div v-if="inputType === 'number'" part="cc-number">
-                <div class="form-group">
-                  <label for="cc-number">Card number</label>
-                  <slot name="cc-number"></slot>
-                </div>
+            </div>
+            <div v-if="inputType === 'number'" part="cc-number">
+              <div class="form-group">
+                <label for="cc-number">Card number</label>
+                <slot name="cc-number"></slot>
               </div>
-              <div v-if="inputType === 'expiration'" part="cc-expiration-date">
-                <div class="form-group">
-                  <label for="cc-expiration-date">Expiration</label>
-                  <slot name="cc-expiration-date"></slot>
-                </div>
+            </div>
+            <div v-if="inputType === 'expiration'" part="cc-expiration-date">
+              <div class="form-group">
+                <label for="cc-expiration-date">Expiration</label>
+                <slot name="cc-expiration-date"></slot>
               </div>
-              <div v-if="inputType === 'cvc'" part="cc-cvc">
-                <div class="form-group">
-                  <label for="cc-cvc">CVC</label>
-                  <slot name="cc-cvc"></slot>
-                </div>
+            </div>
+            <div v-if="inputType === 'cvc'" part="cc-cvc">
+              <div class="form-group">
+                <label for="cc-cvc">CVC</label>
+                <slot name="cc-cvc"></slot>
               </div>
+            </div>
 
-              <!--Submit credit card form button-->
-              <!-- <div>
+            <!--Submit credit card form button-->
+            <!-- <div>
                 <button
                   part="button"
                   id="submitButton"
@@ -202,32 +201,19 @@ defineExpose({ validateForm, inputType })
                   {{ submitButtonText }}
                 </button>
               </div> -->
-            </form>
-            <div v-if="errorsVisible" id="errors">
-              <div
-                class="error-msg"
-                v-if="formState.CreditCardNumber.errorMessages.length > 0"
-              >
-                Card number {{ formState.CreditCardNumber.errorMessages[0] }}
-              </div>
-              <div
-                class="error-msg"
-                v-if="formState.Cvv.errorMessages.length > 0"
-              >
-                CVC {{ formState.Cvv.errorMessages[0] }}
-              </div>
-              <div
-                class="error-msg"
-                v-if="formState.ExpirationDate.errorMessages.length > 0"
-              >
-                Expiration date {{ formState.ExpirationDate.errorMessages[0] }}
-              </div>
-              <div
-                class="error-msg"
-                v-if="formState.CardHolderName.errorMessages.length > 0"
-              >
-                Name {{ formState.CardHolderName.errorMessages[0] }}
-              </div>
+          </form>
+          <div v-if="errorsVisible" id="errors">
+            <div class="error-msg" v-if="formState.CreditCardNumber.errorMessages.length > 0">
+              Card number {{ formState.CreditCardNumber.errorMessages[0] }}
+            </div>
+            <div class="error-msg" v-if="formState.Cvv.errorMessages.length > 0">
+              CVC {{ formState.Cvv.errorMessages[0] }}
+            </div>
+            <div class="error-msg" v-if="formState.ExpirationDate.errorMessages.length > 0">
+              Expiration date {{ formState.ExpirationDate.errorMessages[0] }}
+            </div>
+            <div class="error-msg" v-if="formState.CardHolderName.errorMessages.length > 0">
+              Name {{ formState.CardHolderName.errorMessages[0] }}
             </div>
           </div>
         </div>
@@ -238,9 +224,11 @@ defineExpose({ validateForm, inputType })
 
 <style scoped>
 @import "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css";
+
 .form-control {
-  height: 40px!important;
+  height: 40px !important;
 }
+
 span[id*="cc-"] {
   display: block;
   height: 40px;
@@ -293,8 +281,14 @@ p {
   letter-spacing: 0;
   font-style: normal;
 }
+
 .vgs-collect-container__invalid.vgs-collect-container__touched {
   border: 1px solid #ff1721;
 }
+.card-body {
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    padding: 0 1.25rem;
+}
 </style>
-  
