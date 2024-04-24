@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, onMounted, reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { loadVGSCollect } from "@vgs/collect-js";
 
-
 const props = defineProps<{
-  showbutton?: boolean,
-  inputtype?: string
+    inputType: 'text' | 'card-number' | 'card-security-code' | 'card-expiration-date',
+    showbutton?: boolean,
 }>();
 
 let form = ref({} as any);
@@ -15,37 +14,7 @@ let formState = reactive({
   ExpirationDate: { errorMessages: [] },
   CardHolderName: { errorMessages: [] },
 });
-const errorsVisible = ref(false);
-const submitButtonText = ref("Submit");
-const isButtonDisabled = ref(false);
-const emit = defineEmits(["submit-success", "validation-error"]);
 
-const inputType = ref(props.inputtype || null);
-
-const validateForm = (event: { preventDefault: () => void }) => {
-  event.preventDefault();
-  const { CreditCardNumber, Cvv, ExpirationDate, CardHolderName } = formState;
-  errorsVisible.value =
-    CreditCardNumber.errorMessages.length > 0 ||
-    Cvv.errorMessages.length > 0 ||
-    ExpirationDate.errorMessages.length > 0 ||
-    CardHolderName.errorMessages.length > 0;
-
-  if (errorsVisible.value) {
-    // Display errors and keep the button enabled
-    submitButtonText.value = "Submit";
-    isButtonDisabled.value = false;
-    emit("validation-error", { message: "Error de validación", formState });
-
-    
-  } else {
-    // No errors, proceed to tokenize
-    submitButtonText.value = "Tokenizing...";
-    isButtonDisabled.value = true;
-    submitForm();
-    // Call your tokenization function here
-  }
-};
 onMounted(async () => {
   const collect: any = await loadVGSCollect({
     vaultId: "tntne5koztu",
@@ -61,8 +30,10 @@ onMounted(async () => {
     )
       formState = state;
   });
-  switch (props.inputtype) {
-    case 'name':
+
+  // Initialize the form field based on the inputType
+  switch (props.inputType) {
+    case 'text':
       form.field("#cc-name", {
         type: "text",
         name: "CardHolderName",
@@ -70,7 +41,7 @@ onMounted(async () => {
         validations: ["required"],
       });
       break;
-    case 'number':
+    case 'card-number':
       form.field("#cc-number", {
         type: "card-number",
         name: "CreditCardNumber",
@@ -80,7 +51,7 @@ onMounted(async () => {
         validations: ["required", "validCardNumber"],
       });
       break;
-    case 'cvc':
+    case 'card-security-code':
       form.field("#cc-cvc", {
         type: "card-security-code",
         name: "Cvv",
@@ -88,7 +59,7 @@ onMounted(async () => {
         validations: ["required", "validCardSecurityCode"],
       });
       break;
-    case 'expiration':
+    case 'card-expiration-date':
       form.field("#cc-expiration-date", {
         type: "card-expiration-date",
         yearLength: 2,
@@ -106,55 +77,8 @@ onMounted(async () => {
         validations: ["required", "validCardExpirationDate"],
       });
       break;
-    }
-  form.value = form;
-});
-// Handle form submission
-const submitForm = async () => {
-  try {
-    // Implement the form submission logic here
-    const env = "sandbox-platform";
-    const subMerchantId = "jpt-sim-md-1";
-    let resp = await fetch(
-      "https://" +
-        env +
-        ".jupiterhq.com/v1/transactions/creditcard/tokenization/" +
-        subMerchantId +
-        "/session"
-    );
-    let sessionData = await resp.json();
-    let sessionId;
-    if (sessionData.data && sessionData.data.status === "active") {
-      sessionId = sessionData.data.sessionId;
-    }
-    if (form.value) {
-      // Accediendo a la instancia de VGSCollect a través de .value
-
-      //submit cc fields to VGS for tokenization
-      form.value.submit(
-        "/v1/transactions/creditcard/tokenization/" + subMerchantId,
-        { data: { sessionToken: sessionId } },
-        async (status: any, response: any) => {
-          submitButtonText.value = "Submit";
-          emit("submit-success", { data: response.data.token });
-          submitButtonText.value = "Submit";
-          isButtonDisabled.value = false;
-        }
-      );
-    }
-  } catch (error) {
-    // Handle or log the error
-    submitButtonText.value = "Submit";
-    isButtonDisabled.value = false;
-    emit("validation-error", { message: "Error de validación", formState });
-    return error
-    
-    // You might also want to update the UI or state to reflect the error
   }
-};
-
-defineExpose({ validateForm, inputType })
-
+});
 </script>
 
 <template>
@@ -164,33 +88,33 @@ defineExpose({ validateForm, inputType })
         <div class="row card card-outline-secondary" part="card">
           <div class="card-body">
             <form id="cc-form">
-              <div v-if="inputType === 'name'" part="cc-name">
+              <div part="cc-name">
                 <div class="form-group">
                   <label for="cc-name">Name</label>
                   <slot name="cc-name"></slot>
                 </div>
               </div>
-              <div v-if="inputType === 'number'" part="cc-number">
+              <div part="cc-number">
                 <div class="form-group">
                   <label for="cc-number">Card number</label>
                   <slot name="cc-number"></slot>
                 </div>
               </div>
-              <div v-if="inputType === 'expiration'" part="cc-expiration-date">
+              <div part="cc-expiration-date">
                 <div class="form-group">
                   <label for="cc-expiration-date">Expiration</label>
                   <slot name="cc-expiration-date"></slot>
                 </div>
               </div>
-              <div v-if="inputType === 'cvc'" part="cc-cvc">
+              <div part="cc-cvc">
                 <div class="form-group">
                   <label for="cc-cvc">CVC</label>
                   <slot name="cc-cvc"></slot>
                 </div>
               </div>
 
-              <!--Submit credit card form button-->
-              <!-- <div>
+              <!-- Submit credit card form button
+              <div>
                 <button
                   part="button"
                   id="submitButton"
@@ -203,7 +127,7 @@ defineExpose({ validateForm, inputType })
                 </button>
               </div> -->
             </form>
-            <div v-if="errorsVisible" id="errors">
+            <!-- <div v-if="errorsVisible" id="errors">
               <div
                 class="error-msg"
                 v-if="formState.CreditCardNumber.errorMessages.length > 0"
@@ -228,7 +152,7 @@ defineExpose({ validateForm, inputType })
               >
                 Name {{ formState.CardHolderName.errorMessages[0] }}
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -238,9 +162,7 @@ defineExpose({ validateForm, inputType })
 
 <style scoped>
 @import "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css";
-.form-control {
-  height: 40px!important;
-}
+
 span[id*="cc-"] {
   display: block;
   height: 40px;

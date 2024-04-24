@@ -64,47 +64,41 @@
 </head>
 <body>
   <div style="width: 500px;">
-    <tokenization-form>
-      <div slot="cc-name">
-        <span
-          id="cc-name"
-          class="form-field">
-          <!--JUPITER Collect iframe for card name field will be here!-->
-        </span>
-      </div>
-      <div slot="cc-number">
-        <span id="cc-number" class="form-field"
-        part="input">
-          <!--JUPITER Collect iframe for card number field will be here!-->
-        </span>
-      </div>
-      <div slot="cc-cvc">
-        <span id="cc-cvc" class="form-field"
-        part="input">
-          <!--JUPITER Collect iframe for CVC field will be here!-->
-        </span>
-      </div>
-      <div slot="cc-expiration-date">
-        <span id="cc-expiration-date" class="form-field"
-        part="input">
-          <!--JUPITER Collect iframe for expiration date field will be here!-->
-        </span>
-      </div>
-    </tokenization-form>
+    <form id="myForm">
+      <tokenization-input showbutton="true" inputtype="name">
+        <div slot="cc-name">
+          <span
+            id="cc-name"
+            class="form-field">
+            <!--JUPITER Collect iframe for card name field will be here!-->
+          </span>
+        </div>
+      </tokenization-input>
+      <tokenization-input showbutton="true" inputtype="number">
+        <div slot="cc-number">
+          <span
+            id="cc-number"
+            class="form-field">
+            <!--JUPITER Collect iframe for card name field will be here!-->
+          </span>
+        </div>
+      </tokenization-input>
+      <button type="submit">Submit</button>
+    </form>
   </div>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const TokenizationForm = document.querySelector('tokenization-form');  
-        TokenizationForm.addEventListener('validation-error', (event) => {
-          console.log(event.detail); // Contains field and message
-        });
-        TokenizationForm.addEventListener('submit-success', (event) => {
-          console.log(event.detail); // Contains field and message
-        });
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('myForm');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        console.log('submit')
+        const formData = new FormData(form);
+        for (let [name, value] of formData) {
+          console.log(`${name}: ${value}`);
+        }
       });
-    </script>
-  <!-- <script src="https://tokenization-form-z3m5.vercel.app/tokenization-form.umd.js"></script> -->
-  <script src="../dist/tokenization-form.umd.js"></script>
-
+    });
+  </script>
+  <script src="./dist/tokenization-form.umd.js"></script>
 </body>
 </html>

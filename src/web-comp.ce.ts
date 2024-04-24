@@ -5,5 +5,5 @@ import VueTokenizationForm from "./components/tokenization-form.ce.vue";
 console.log(VueTokenizationForm.styles);
 export const TokenizationForm = defineCustomElement(VueTokenizationForm);
 
-customElements.define("tokenization-form", TokenizationForm);
+customElements.define("tokenization-input", TokenizationForm);
 
